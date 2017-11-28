@@ -491,7 +491,7 @@ var newTabTools = {
 		Tiles.putTile(link);
 	},
 	refreshBackgroundImage: function() {
-		Background.getBackground().then(background => {
+		return Background.getBackground().then(background => {
 			if (!background) {
 				document.body.style.backgroundImage = this.backgroundFake.style.backgroundImage = null;
 				this.removeBackgroundButton.disabled = true;

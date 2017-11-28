@@ -36,7 +36,7 @@ async function makeZip() {
 	}
 	await addEntry('tiles.json', JSON.stringify(tiles, null, '\t'));
 
-	await new Promise(function(resolve) {
+	return new Promise(function(resolve) {
 		writer.close(function(blob) {
 			// blob contains the zip file as a Blob object
 			chrome.downloads.download({
@@ -67,6 +67,8 @@ async function readZip(file) {
 		});
 	}
 
+	let views = chrome.extension.getViews().filter(v => v.location.pathname == '/newTab.xhtml');
+
 	let reader = await new Promise(function(resolve, reject) {
 		zip.createReader(new zip.BlobReader(file), resolve, reject);
 	});
@@ -78,6 +80,9 @@ async function readZip(file) {
 	let backgroundFile = entries.find(e => e.filename == 'background');
 	if (backgroundFile) {
 		Background.setBackground(await getAsBlob(backgroundFile));
+		for (let v of views) {
+			await v.newTabTools.refreshBackgroundImage();
+		}
 	}
 
 	let prefs = await getAsJSON('prefs.json');
@@ -105,5 +110,11 @@ async function readZip(file) {
 	await Tiles.clear();
 	for (let t of tilesMap.values()) {
 		await Tiles.putTile(t);
+	}
+
+	for (let v of views) {
+		await new Promise(function(resolve) {
+			v.Updater.updateGrid(resolve);
+		});
 	}
 }
