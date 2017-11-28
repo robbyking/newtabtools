@@ -43,6 +43,11 @@ var Tiles = {
 		return new Promise(resolve => {
 			chrome.runtime.sendMessage({ name: 'Tiles.removeTile', tile }, resolve);
 		});
+	},
+	clear: function() {
+		return new Promise(resolve => {
+			chrome.runtime.sendMessage({ name: 'Tiles.clear' }, resolve);
+		});
 	}
 };
 

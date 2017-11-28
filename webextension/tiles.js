@@ -130,6 +130,13 @@ var Tiles = {
 			op.onerror = reject;
 		});
 	},
+	clear: function() {
+		return new Promise(function(resolve, reject) {
+			let op = db.transaction('tiles', 'readwrite').objectStore('tiles').clear();
+			op.onsuccess = () => resolve();
+			op.onerror = reject;
+		});
+	},
 	pinTile: function(title, url) {
 		if (this.isPinned(url)) {
 			return Promise.resolve();
