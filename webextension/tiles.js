@@ -13,7 +13,14 @@ var Tiles = {
 	isPinned: function(url) {
 		return this._list.includes(url);
 	},
-	getAllTiles: function() {
+	getAll: function() {
+		return new Promise(function(resolve, reject) {
+			let op = db.transaction('tiles').objectStore('tiles').getAll();
+			op.onsuccess = () => resolve(op.result);
+			op.onerror = reject;
+		});
+	},
+	getAllTiles: function() { // TODO: This is a silly name.
 		this._ready = true;
 		let count = Prefs.rows * Prefs.columns;
 		return new Promise(resolve => {

@@ -5,7 +5,7 @@ var Tiles = {
 	isPinned: function(url) {
 		return this._list.includes(url);
 	},
-	getAllTiles: function() {
+	getAllTiles: function() { // TODO: This is a silly name.
 		return new Promise((resolve, reject) => {
 			chrome.runtime.sendMessage({ name: 'Tiles.getAllTiles' }, response => {
 				if (response === null) {
@@ -18,6 +18,11 @@ var Tiles = {
 			});
 		});
 	},
+	// getAll: function() {
+	// 	return new Promise(resolve => {
+	// 		chrome.runtime.sendMessage({ name: 'Tiles.getAll' }, resolve);
+	// 	});
+	// },
 	getTile: function(url) {
 		return new Promise(resolve => {
 			chrome.runtime.sendMessage({ name: 'Tiles.getTile', url }, resolve);
@@ -43,11 +48,11 @@ var Tiles = {
 		return new Promise(resolve => {
 			chrome.runtime.sendMessage({ name: 'Tiles.removeTile', tile }, resolve);
 		});
-	},
-	clear: function() {
-		return new Promise(resolve => {
-			chrome.runtime.sendMessage({ name: 'Tiles.clear' }, resolve);
-		});
+	// },
+	// clear: function() {
+	// 	return new Promise(resolve => {
+	// 		chrome.runtime.sendMessage({ name: 'Tiles.clear' }, resolve);
+	// 	});
 	}
 };
 
