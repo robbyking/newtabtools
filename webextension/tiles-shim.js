@@ -18,11 +18,6 @@ var Tiles = {
 			});
 		});
 	},
-	// getAll: function() {
-	// 	return new Promise(resolve => {
-	// 		chrome.runtime.sendMessage({ name: 'Tiles.getAll' }, resolve);
-	// 	});
-	// },
 	getTile: function(url) {
 		return new Promise(resolve => {
 			chrome.runtime.sendMessage({ name: 'Tiles.getTile', url }, resolve);
@@ -48,11 +43,6 @@ var Tiles = {
 		return new Promise(resolve => {
 			chrome.runtime.sendMessage({ name: 'Tiles.removeTile', tile }, resolve);
 		});
-	// },
-	// clear: function() {
-	// 	return new Promise(resolve => {
-	// 		chrome.runtime.sendMessage({ name: 'Tiles.clear' }, resolve);
-	// 	});
 	}
 };
 

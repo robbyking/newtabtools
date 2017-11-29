@@ -112,9 +112,6 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 			sendResponse(null);
 		});
 		return true;
-	// case 'Tiles.getAll':
-	// 	Tiles.getAll().then(sendResponse, console.error);
-	// 	return true;
 	case 'Tiles.getTile':
 		Tiles.getTile(message.url).then(sendResponse, console.error);
 		return true;
@@ -124,9 +121,6 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 	case 'Tiles.removeTile':
 		Tiles.removeTile(message.tile).then(sendResponse, console.error);
 		return true;
-	// case 'Tiles.clear':
-	// 	Tiles.clear().then(sendResponse, console.error);
-	// 	return true;
 	case 'Tiles.pinTile':
 		Tiles.pinTile(message.title, message.url).then(function(id) {
 			for (let view of chrome.extension.getViews()) {

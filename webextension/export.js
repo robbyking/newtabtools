@@ -38,10 +38,9 @@ async function makeZip() {
 
 	return new Promise(function(resolve) {
 		writer.close(function(blob) {
-			// blob contains the zip file as a Blob object
 			chrome.downloads.download({
 				url: URL.createObjectURL(blob),
-				filename: 'zip.zip',
+				filename: 'newtabtools.zip',
 				saveAs: true
 			}, resolve);
 		});
