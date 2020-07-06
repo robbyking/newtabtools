@@ -7,6 +7,7 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
 <head>
 	<title data-message="newtab_pageTitle"></title>
 	<link rel="stylesheet" href="newTab.css" type="text/css" />
+	<link id="dark-icons" rel="stylesheet" href="darkIcons.css" type="text/css" />
 </head>
 <body>
 	<div id="background-fake"></div>
@@ -62,13 +63,20 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
 						<button id="options-pinURL" data-message="pin_url_button"></button>
 					</div>
 					<div class="options-row" style="position: relative;">
-						<ul id="autocomplete" hidden=""></ul>
+						<ul id="autocomplete" hidden="">
+							<li id="options-pinURL-blocked">
+								<p data-message="pin_url_permissions"></p>
+								<div>
+									<button id="options-pinURL-permissions" data-message="pin_url_request"></button>
+								</div>
+							</li>
+						</ul>
 						<template>
 							<li>
 								<div class="autocomplete-icon"></div>
 								<div class="autocomplete-detail">
-									<div class="autocomplete-title"></div>
-									<div class="autocomplete-url"></div>
+									<div class="autocomplete-title" tabindex="-1"></div>
+									<div class="autocomplete-url" tabindex="-1"></div>
 								</div>
 							</li>
 						</template>
@@ -88,6 +96,10 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
 						<button id="options-next-row-tile" class="arrow" data-title="tile_selection_nextrow_tooltip"></button>
 					</div>
 					<label id="options-url"></label>
+					<div id="options-edit-url" class="options-row">
+						<input id="options-url-input" data-placeholder="tile_url_placeholder" />
+						<button id="options-url-set" data-message="tile_url_set"></button>
+					</div>
 					<label class="options-row-label" for="options-savedthumb-input" data-message="tile_savedthumb_label"></label>
 					<div class="options-row">
 						<button id="options-savethumb" data-message="tile_savedthumb_savecurrent"></button>
@@ -107,7 +119,7 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
 						<button id="options-bgcolor-reset" data-message="tile_thumbnail_remove"></button>
 					</div>
 					<label class="options-row-label" for="options-title-input" data-message="tile_title_label"></label>
-					<div class="options-row">
+					<div id="options-edit-title" class="options-row">
 						<input id="options-title-input" data-placeholder="tile_title_placeholder" />
 						<button id="options-title-set" data-message="tile_title_set"></button>
 					</div>
@@ -207,6 +219,10 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
 							</td>
 						</tr>
 					</table>
+
+					<div class="options-row" style="margin-top: 1em;">
+						<button id="options-backup-restore" data-message="backup_restore_button"></button>
+					</div>
 				</fieldset>
 				<div class="spacer"></div>
 				<fieldset id="options-donate-wrap">
@@ -219,7 +235,7 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
 					</div>
 				</fieldset>
 			</div>
-			<div id="options-filter">
+			<div id="options-filter" class="options-extra">
 				<fieldset>
 					<legend data-message="filter_title"></legend>
 					<table>
@@ -266,6 +282,24 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
 					</table>
 				</fieldset>
 			</div>
+			<div id="options-export" class="options-extra">
+				<fieldset>
+					<legend data-message="backup_header"></legend>
+					<p data-message="backup_description"></p>
+					<div class="options-row">
+						<button id="options-backup" data-message="backup_button"></button>
+					</div>
+				</fieldset>
+				<fieldset>
+					<legend data-message="restore_header"></legend>
+					<p data-message="restore_description"></p>
+					<p data-message="restore_warning" style="font-style: italic;"></p>
+					<div class="options-row">
+						<input id="options-restore-file" type="file" accept="application/zip" />
+						<button id="options-restore" disabled="" data-message="restore_button"></button>
+					</div>
+				</fieldset>
+			</div>
 		</div>
 	</div>
 	<div id="database-error">
@@ -295,6 +329,7 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
 	<svg xmlns="http://www.w3.org/2000/svg">
 		<path fill="none" stroke="#f0f" stroke-width="4" />
 	</svg>
+	<script type="text/javascript" src="common.js"></script>
 	<script type="text/javascript" src="tiles-shim.js"></script>
 	<script type="text/javascript" src="prefs.js"></script>
 	<script type="text/javascript" src="newTab.js"></script>

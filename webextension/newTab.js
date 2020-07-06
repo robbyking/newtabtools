@@ -1,38 +1,43 @@
-/*
-This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this file,
-You can obtain one at http://mozilla.org/MPL/2.0/.
-*/
-/* globals Prefs, Filters, Grid, Page, Tiles, Updater, Transformation, Background, chrome, -length */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* import-globals-from common.js */
+/* import-globals-from fx-newTab.js */
+/* import-globals-from prefs.js */
+/* import-globals-from tiles-shim.js */
 
 var HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
 
 var newTabTools = {
-	getString: function(name, ...substitutions) {
+	getString(name, ...substitutions) {
 		return chrome.i18n.getMessage(name, substitutions);
 	},
-	isValidURL: function(url) {
+	isValidURL(url) {
 		try {
-			return ['http:', 'https:', 'ftp:'].includes(new URL(url).protocol);
+			return ['data:', 'ftp:', 'http:', 'https:', 'moz-extension:'].includes(new URL(url).protocol);
 		} catch (ex) {
 			return false;
 		}
 	},
-	autocomplete: function() {
-		this.pinURLAutocomplete.hidden = false;
+	autocomplete() {
+		this.pinURLButton.disabled = !this.pinURLInput.checkValidity() || !this.isValidURL(this.pinURLInput.value);
 		let value = this.pinURLInput.value;
 		if (value.length < 2) {
+			this.pinURLAutocomplete.hidden = true;
 			while (this.pinURLAutocomplete.lastChild) {
 				this.pinURLAutocomplete.lastChild.remove();
 			}
-			this.pinURLAutocomplete.hidden = true;
 			return;
 		}
 		let valueParts = value.toLowerCase().split(/\s+/);
 
 		let count = 0;
 		let options = Array.from(this.pinURLAutocomplete.children);
-		let urls = options.filter(function(u) {
+		let urls = options.filter(u => {
+			if (u == this.pinURLBlocked) {
+				return false;
+			}
 			let matches = valueParts.every(vp => u.dataset.url.toLowerCase().includes(vp) || u.dataset.title.toLowerCase().includes(vp));
 			if (matches) {
 				count++;
@@ -49,6 +54,7 @@ var newTabTools = {
 		}
 
 		if (count >= 10) {
+			this.pinURLAutocomplete.hidden = false;
 			return;
 		}
 
@@ -79,29 +85,37 @@ var newTabTools = {
 			urls.push(item.url);
 		};
 
-		chrome.bookmarks.getTree(tree => {
-			function traverse(children) {
-				for (let c of children) {
-					if ('children' in c) { // c.type == 'folder' in >=57
-						traverse(c.children);
-					} else { // c.type == 'bookmark' in >=57
-						maybeAddItem(c, 'bookmark');
-					}
-				}
+		chrome.tabs.query({}, tabs => {
+			for (let t of tabs) {
+				maybeAddItem(t, 'tab');
 			}
 
-			traverse(tree[0].children);
-
 			if (count >= 10) {
+				this.pinURLAutocomplete.hidden = false;
 				return;
 			}
 
-			chrome.tabs.query({}, tabs => {
-				for (let t of tabs) {
-					maybeAddItem(t, 'tab');
+			if (!this.pinURLBlocked.hidden) {
+				this.pinURLAutocomplete.appendChild(this.pinURLBlocked);
+				this.pinURLAutocomplete.hidden = false;
+				return;
+			}
+
+			chrome.bookmarks.getTree(tree => {
+				function traverse(children) {
+					for (let c of children) {
+						if (c.type == 'folder') {
+							traverse(c.children);
+						} else if (c.type == 'bookmark') {
+							maybeAddItem(c, 'bookmark');
+						}
+					}
 				}
 
+				traverse(tree[0].children);
+
 				if (count >= 10) {
+					this.pinURLAutocomplete.hidden = false;
 					return;
 				}
 
@@ -117,10 +131,17 @@ var newTabTools = {
 			});
 		});
 	},
+	setPinURLInputValue(url) {
+		this.pinURLInput.value = url;
+		this.pinURLInput.focus();
+		this.pinURLInput.selectionStart = this.pinURLInput.selectionEnd = url.length;
+		this.pinURLButton.disabled = !this.pinURLInput.checkValidity() || !this.isValidURL(url);
+		this.pinURLAutocomplete.hidden = true;
+	},
 	get selectedSite() {
 		return Grid.sites[this._selectedSiteIndex];
 	},
-	optionsOnClick: function(event) {
+	optionsOnClick(event) {
 		if (event.target.disabled) {
 			return;
 		}
@@ -129,6 +150,15 @@ var newTabTools = {
 		case 'options-close-button':
 			newTabTools.hideOptions();
 			break;
+		case 'options-pinURL-permissions':
+			chrome.permissions.request({permissions: ['bookmarks', 'history']}, (succeeded) => {
+				if (succeeded) {
+					this.pinURLBlocked.hidden = true;
+					this.pinURLInput.focus();
+					this.autocomplete();
+				}
+			});
+			return;
 		case 'options-pinURL':
 			if (!this.pinURLInput.checkValidity()) {
 				throw 'URL is invalid';
@@ -202,8 +232,7 @@ var newTabTools = {
 				site.link.id = dbID;
 				site.link.position = position;
 				site.updateAttributes(true);
-				newTabTools.pinURLInput.value = '';
-				newTabTools.pinURLInput.focus();
+				newTabTools.setPinURLInputValue('');
 				newTabTools.selectedSiteIndex = position;
 
 				Transformation.freezeSitePosition(site);
@@ -238,6 +267,11 @@ var newTabTools = {
 			break;
 		case 'options-next-row-tile':
 			this.selectedSiteIndex = (this._selectedSiteIndex + Prefs.columns) % Grid.cells.length;
+			break;
+		case 'options-url-set':
+			this.selectedSite.link.url = this.siteURLInput.value;
+			this.selectedSite.addTitle();
+			Tiles.putTile(this.selectedSite.link);
 			break;
 		case 'options-savethumb':
 			let link = this.selectedSite.link;
@@ -305,7 +339,7 @@ var newTabTools = {
 			});
 			break;
 		case 'historytiles-filter':
-			document.documentElement.setAttribute('options-filter-shown', '');
+			this.showOptionsExtra('filter');
 			this.fillFilterUI();
 			return;
 		case 'options-filter-set':
@@ -316,6 +350,18 @@ var newTabTools = {
 			this.optionsFilterCount.value = '';
 			this.optionsFilterHost.focus();
 			this.optionsFilterSet.disabled = true;
+			return;
+		case 'options-backup-restore':
+			this.showOptionsExtra('export');
+			return;
+		case 'options-backup':
+			chrome.permissions.request({permissions: ['downloads']}, function(succeeded) {
+				chrome.runtime.sendMessage({name: 'Export:backup'});
+			});
+			return;
+		case 'options-restore':
+			let input = newTabTools.optionsPane.querySelector('#options-export input[type="file"]');
+			chrome.runtime.sendMessage({name: 'Import:restore', file: input.files[0]});
 			return;
 		case 'options-donate':
 		case 'newtab-update-donate':
@@ -350,19 +396,8 @@ var newTabTools = {
 			Filters.setFilter(row.cells[0].textContent, count);
 			Updater.updateGrid();
 		}
-
-		if (this.pinURLAutocomplete.compareDocumentPosition(event.target) & Node.DOCUMENT_POSITION_CONTAINED_BY) {
-			let target = event.target;
-			while (target.nodeName != 'li') {
-				target = target.parentNode;
-			}
-			this.pinURLInput.value = target.dataset.url;
-			this.pinURLInput.focus();
-			this.pinURLInput.selectionStart = this.pinURLInput.selectionEnd = this.pinURLInput.value.length;
-			this.pinURLAutocomplete.hidden = true;
-		}
 	},
-	optionsOnChange: function(event) {
+	optionsOnChange(event) {
 		if (event.target.disabled) {
 			return;
 		}
@@ -389,7 +424,7 @@ var newTabTools = {
 			break;
 		}
 	},
-	contextMenuShowing: function() {
+	contextMenuShowing() {
 		let site = document.activeElement;
 		while (site != document && !site.classList.contains('newtab-site')) {
 			site = site.parentNode;
@@ -404,7 +439,7 @@ var newTabTools = {
 			newTabTools.contextMenuUnpin.hidden = !pinned;
 		}
 	},
-	contextMenuOnClick: function(event) {
+	contextMenuOnClick(event) {
 		let site = document.activeElement;
 		while (site != document && !site.classList.contains('newtab-site')) {
 			site = site.parentNode;
@@ -442,7 +477,7 @@ var newTabTools = {
 			break;
 		}
 	},
-	setThumbnail: function(site, src) {
+	setThumbnail(site, src) {
 		let image = new Image();
 		image.onload = function() {
 			let thumbnailSize = Prefs.thumbnailSize;
@@ -479,7 +514,7 @@ var newTabTools = {
 		};
 		image.src = src;
 	},
-	removeThumbnail: function(site) {
+	removeThumbnail(site) {
 		let link = site.link;
 		delete link.image;
 		delete link.imageIsThumbnail;
@@ -490,8 +525,8 @@ var newTabTools = {
 
 		Tiles.putTile(link);
 	},
-	refreshBackgroundImage: function() {
-		Background.getBackground().then(background => {
+	refreshBackgroundImage() {
+		return Background.getBackground().then(background => {
 			if (!background) {
 				document.body.style.backgroundImage = this.backgroundFake.style.backgroundImage = null;
 				this.removeBackgroundButton.disabled = true;
@@ -504,7 +539,7 @@ var newTabTools = {
 			this.removeBackgroundButton.disabled = false;
 		});
 	},
-	updateUI: function(keys) {
+	updateUI(keys) {
 		function setMargin(piece, size) {
 			for (let pieceElement of document.querySelectorAll(piece)) {
 				pieceElement.classList.remove('medium');
@@ -527,6 +562,7 @@ var newTabTools = {
 			let theme = Prefs.theme;
 			document.querySelector('[name="theme"][value="' + theme + '"]').checked = true;
 			document.documentElement.setAttribute('theme', theme);
+			this.darkIcons.disabled = theme == 'light';
 		}
 
 		if (!keys || keys.includes('locked')) {
@@ -586,7 +622,7 @@ var newTabTools = {
 			this.resizeOptionsThumbnail();
 		}
 	},
-	refreshRecent: function() {
+	refreshRecent() {
 		if (!Prefs.recent) {
 			this.recentList.hidden = true;
 			return;
@@ -634,7 +670,7 @@ var newTabTools = {
 			this.recentList.hidden = !added;
 		});
 	},
-	trimRecent: function() {
+	trimRecent() {
 		this.recentList.style.width = '0';
 
 		let width = this.recentListOuter.clientWidth;
@@ -673,6 +709,8 @@ var newTabTools = {
 				this.siteThumbnail.style.backgroundColor =
 				this.setBgColourDisplay.style.backgroundColor = null;
 			this.siteURL.textContent = this.getString('tileurl_empty');
+			this.siteURL.hidden = false;
+			this.editSiteURLRow.hidden = true;
 			this.setTitleInput.value = '';
 			this.saveCurrentThumbButton.disabled =
 				this.removeSavedThumbButton.disabled =
@@ -707,6 +745,9 @@ var newTabTools = {
 		this.tileNextRow.style.opacity = (row + 1 == rows) ? 0.25 : null;
 
 		this.siteURL.textContent = site.url;
+		this.siteURLInput.value = site.url;
+		this.siteURL.hidden = site.isPinned;
+		this.editSiteURLRow.hidden = !site.isPinned;
 		let backgroundColor = site.link.backgroundColor;
 		this.siteThumbnail.style.backgroundColor =
 			this.setBgColourInput.value =
@@ -715,23 +756,25 @@ var newTabTools = {
 			this.resetBgColourButton.disabled = !backgroundColor;
 		this.setTitleInput.value = site.title || site.url;
 	},
-	toggleOptions: function() {
+	toggleOptions() {
 		if (document.documentElement.hasAttribute('options-hidden')) {
 			document.documentElement.removeAttribute('options-hidden');
 			this.selectedSiteIndex = 0;
 			this.resizeOptionsThumbnail();
 			this.pinURLInput.focus();
+			requestAnimationFrame(() => {
+				this.siteURL.style.lineHeight = this.editSiteTitleRow.getBoundingClientRect().height + 'px';
+			});
 		} else {
 			this.hideOptions();
 		}
 	},
-	hideOptions: function() {
+	hideOptions() {
 		document.documentElement.setAttribute('options-hidden', 'true');
-		document.documentElement.removeAttribute('options-filter-shown');
 		newTabTools.pinURLAutocomplete.hidden = true;
-		newTabTools.optionsFilter.style.display = null;
+		this.showOptionsExtra();
 	},
-	resizeOptionsThumbnail: function() {
+	resizeOptionsThumbnail() {
 		let node = Grid.node.querySelector('.newtab-thumbnail');
 		let ratio = node.offsetWidth / node.offsetHeight;
 		if (ratio > 1.6666) {
@@ -742,10 +785,20 @@ var newTabTools = {
 			this.siteThumbnail.style.height = '150px';
 		}
 	},
-	fillFilterUI: function(highlightHost) {
-		let pinned = Grid.sites
-				.filter(s => s && 'position' in s.link)
-				.reduce((carry, s) => {
+	showOptionsExtra(which) {
+		if (!which) {
+			document.documentElement.removeAttribute('options-extra');
+		} else if (!document.documentElement.hasAttribute('options-extra')) {
+			document.documentElement.setAttribute('options-extra', which);
+			return;
+		}
+
+		for (let oe of newTabTools.optionsPane.querySelectorAll('.options-extra')) {
+			oe.style.display = (oe.id == 'options-' + which) ? 'block' : null;
+		}
+	},
+	async fillFilterUI(highlightHost) {
+		let pinned = Grid.sites.filter(s => s && 'position' in s.link).reduce((carry, s) => {
 			let host = new URL(s.url).host;
 			if (!(host in carry)) {
 				carry[host] = 0;
@@ -785,7 +838,14 @@ var newTabTools = {
 		}
 
 		if (this.optionsFilterHostAutocomplete.childElementCount === 0) {
-			chrome.topSites.get({ providers: ['places'] }, sites => {
+			let {version} = await browser.runtime.getBrowserInfo();
+			let options;
+			if (compareVersions(version, '63.0a1') >= 0) {
+				options = { limit: 100, onePerDomain: false, includeBlocked: true };
+			} else {
+				options = { providers: ['places'] };
+			}
+			chrome.topSites.get(options, sites => {
 				for (let s of sites.reduce((carry, site) => {
 					let {protocol, host} = new URL(site.url);
 					if (host && ['http:', 'https:', 'ftp:'].includes(protocol) && !carry.includes(host)) {
@@ -800,7 +860,7 @@ var newTabTools = {
 			});
 		}
 	},
-	startup: function() {
+	startup() {
 		if (!window.chrome) {
 			// The page couldn't be loaded properly because WebExtensions is too slow. Sad.
 			return;
@@ -819,7 +879,7 @@ var newTabTools = {
 			n.parentNode.insertBefore(document.createTextNode(newTabTools.getString(n.dataset.label)), n.nextSibling);
 		});
 
-		Prefs.init().then(function() {
+		Prefs.init().then(() => {
 			// Everything is loaded. Initialize the New Tab Page.
 			Page.init();
 			newTabTools.updateUI();
@@ -828,10 +888,15 @@ var newTabTools = {
 			chrome.sessions.onChanged.addListener(function() {
 				newTabTools.refreshRecent();
 			});
-		}).then(function() {
+
 			// Forget about visiting this page. It shouldn't be in the history.
 			// Maybe if bug 1322304 is ever fixed we could remove this.
-			chrome.history.deleteUrl({ url: location.href });
+			chrome.permissions.contains({permissions: ['history']}, contains => {
+				if (contains) {
+					chrome.history.deleteUrl({ url: location.href });
+					this.pinURLBlocked.hidden = true;
+				}
+			});
 
 			newTabTools.updateText.textContent = newTabTools.getString('newversion', Prefs.version);
 			newTabTools.updateNotice.dataset.version = Prefs.version;
@@ -842,7 +907,7 @@ var newTabTools = {
 			}
 		}).catch(console.error);
 	},
-	getThumbnails: function() {
+	getThumbnails() {
 		chrome.runtime.sendMessage({
 			name: 'Thumbnails.get',
 			urls: Grid.sites.filter(s => s && !s.thumbnail.style.backgroundImage).map(s => s.link.url)
@@ -871,10 +936,13 @@ var newTabTools = {
 
 (function() {
 	let uiElements = {
+		'darkIcons': 'dark-icons',
 		'backgroundFake': 'background-fake',
 		'page': 'newtab-scrollbox', // used in fx-newTab.js
 		'optionsToggleButton': 'options-toggle',
+		'pinURLBlocked': 'options-pinURL-blocked',
 		'pinURLInput': 'options-pinURL-input',
+		'pinURLButton': 'options-pinURL',
 		'pinURLAutocomplete': 'autocomplete',
 		'tilePreviousRow': 'options-previous-row-tile',
 		'tilePrevious': 'options-previous-tile',
@@ -882,18 +950,20 @@ var newTabTools = {
 		'tileNextRow': 'options-next-row-tile',
 		'siteThumbnail': 'options-thumbnail',
 		'siteURL': 'options-url',
+		'editSiteURLRow': 'options-edit-url',
+		'siteURLInput': 'options-url-input',
+		'setURLButton': 'options-url-set',
 		'saveCurrentThumbButton': 'options-savethumb',
 		'setSavedThumbInput': 'options-savedthumb-input',
-		'setSavedThumbButton': 'options-savedthumb-set',
 		'removeSavedThumbButton': 'options-savedthumb-remove',
 		'setBgColourInput': 'options-bgcolor-input',
 		'setBgColourDisplay': 'options-bgcolor-display',
 		'setBgColourButton': 'options-bgcolor-set',
 		'resetBgColourButton': 'options-bgcolor-reset',
+		'editSiteTitleRow': 'options-edit-title',
 		'setTitleInput': 'options-title-input',
 		'setTitleButton': 'options-title-set',
 		'setBackgroundInput': 'options-bg-input',
-		'setBackgroundButton': 'options-bg-set',
 		'removeBackgroundButton': 'options-bg-remove',
 		'recentList': 'newtab-recent',
 		'recentListOuter': 'newtab-recent-outer',
@@ -925,33 +995,33 @@ var newTabTools = {
 		}
 	}
 
-	newTabTools.updateNotice.addEventListener('click', newTabTools.optionsOnClick.bind(newTabTools), false);
+	newTabTools.updateNotice.addEventListener('click', newTabTools.optionsOnClick.bind(newTabTools));
 	newTabTools.lockedToggleButton.addEventListener('click', function() {
 		Prefs.locked = !Prefs.locked;
 		this.blur();
-	}, false);
-	newTabTools.optionsToggleButton.addEventListener('click', newTabTools.toggleOptions.bind(newTabTools), false);
+	});
+	newTabTools.optionsToggleButton.addEventListener('click', newTabTools.toggleOptions.bind(newTabTools));
 	newTabTools.optionsBackground.addEventListener('click', newTabTools.hideOptions.bind(newTabTools));
 	newTabTools.pinURLInput.addEventListener('input', newTabTools.autocomplete.bind(newTabTools));
-	newTabTools.optionsPane.addEventListener('click', newTabTools.optionsOnClick.bind(newTabTools), false);
-	newTabTools.optionsPane.addEventListener('change', newTabTools.optionsOnChange.bind(newTabTools), false);
+	newTabTools.optionsPane.addEventListener('click', newTabTools.optionsOnClick.bind(newTabTools));
+	newTabTools.optionsPane.addEventListener('change', newTabTools.optionsOnChange.bind(newTabTools));
 	newTabTools.optionsPane.addEventListener('transitionend', function() {
-		if (document.documentElement.hasAttribute('options-filter-shown')) {
-			newTabTools.optionsFilter.style.display = 'block';
+		let extra = document.documentElement.getAttribute('options-extra');
+		if (extra) {
+			newTabTools.showOptionsExtra(extra);
 		}
 	});
 	for (let c of newTabTools.optionsPane.querySelectorAll('select, input[type="range"]')) {
 		c.addEventListener('keyup', keyUpHandler);
 	}
-	newTabTools.setSavedThumbInput.addEventListener('change', function() {
-		newTabTools.setSavedThumbButton.disabled = !this.files.length;
-	});
+	for (let c of newTabTools.optionsPane.querySelectorAll('input[type="file"]')) {
+		c.addEventListener('change', function() { // jshint ignore:line
+			c.nextElementSibling.disabled = !c.files.length;
+		});
+	}
 	newTabTools.setBgColourInput.addEventListener('change', function() {
 		newTabTools.setBgColourDisplay.style.backgroundColor = this.value;
 		newTabTools.setBgColourButton.disabled = false;
-	});
-	newTabTools.setBackgroundInput.addEventListener('change', function() {
-		newTabTools.setBackgroundButton.disabled = !this.files.length;
 	});
 	newTabTools.optionsFilterCount.addEventListener('keydown', function(event) {
 		if (event.key.length == 1 && (event.key < '0' || event.key > '9')) {
@@ -964,7 +1034,7 @@ var newTabTools = {
 	document.body.oncontextmenu = newTabTools.contextMenuShowing;
 	newTabTools.contextMenu.onclick = newTabTools.contextMenuOnClick;
 
-	window.addEventListener('keypress', function(event) {
+	window.addEventListener('keydown', function(event) {
 		if (event.key == 'Escape') {
 			if (newTabTools.pinURLAutocomplete.hidden) {
 				newTabTools.hideOptions();
@@ -976,7 +1046,7 @@ var newTabTools = {
 			switch (event.key) {
 			case 'ArrowDown':
 			case 'ArrowUp':
-				let items = [...newTabTools.pinURLAutocomplete.querySelectorAll('li:not([hidden])')];
+				let items = [...newTabTools.pinURLAutocomplete.querySelectorAll('li:not([hidden]):not(#options-pinURL-blocked)')];
 				if (!items.length) {
 					return;
 				}
@@ -992,13 +1062,39 @@ var newTabTools = {
 				items[index].classList.add('current');
 				break;
 			case 'Enter':
+			case 'Tab':
 				if (current) {
-					newTabTools.pinURLInput.value = current.dataset.url;
-					newTabTools.pinURLInput.selectionStart = newTabTools.pinURLInput.selectionEnd = newTabTools.pinURLInput.value.length;
-					newTabTools.pinURLAutocomplete.hidden = true;
+					newTabTools.setPinURLInputValue(current.dataset.url);
 				}
+				newTabTools.pinURLAutocomplete.hidden = true;
 				break;
 			}
 		}
 	});
+	window.addEventListener('click', function(event) {
+		if (event.button != 0) {
+			return;
+		}
+		if (newTabTools.pinURLInput == event.target) {
+			if (newTabTools.pinURLAutocomplete.hidden) {
+				newTabTools.autocomplete();
+			}
+			return;
+		}
+		if (newTabTools.pinURLAutocomplete.hidden) {
+			return;
+		}
+		if (newTabTools.pinURLAutocomplete.compareDocumentPosition(event.target) & Node.DOCUMENT_POSITION_CONTAINED_BY) {
+			let target = event.target;
+			while (target.nodeName != 'li') {
+				target = target.parentNode;
+			}
+			if (target != newTabTools.pinURLBlocked) {
+				newTabTools.setPinURLInputValue(target.dataset.url);
+			}
+			return;
+		}
+		newTabTools.pinURLAutocomplete.hidden = true;
+		event.stopPropagation();
+	}, true);
 })();

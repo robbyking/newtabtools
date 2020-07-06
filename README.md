@@ -7,8 +7,6 @@ Releases
 ### Firefox
 Released versions can be downloaded from https://addons.mozilla.org/firefox/addon/new-tab-tools/
 
-Beta versions are sometimes available from https://addons.mozilla.org/firefox/addon/new-tab-tools/versions/beta
-
 ### Chrome
 Download from the Chrome store https://chrome.google.com/webstore/detail/new-tab-tools/gfonmeedigdbjpgpeojioadpimflbogh
 
@@ -28,3 +26,7 @@ To get a working version of this repo in Chrome/Chromium, clone it, then switch 
 Localizing
 ----------
 Please send a pull request. [Here's some information that might be helpful](https://github.com/darktrojan/openwith/issues/141#issue-261143759) (it's for another extension, but mostly applies to New Tab Tools).
+
+Credit
+------
+The files in `webextension/lib` are from https://github.com/gildas-lormeau/zip.js.

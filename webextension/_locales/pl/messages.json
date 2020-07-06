@@ -8,6 +8,18 @@
 	"action_pin": {
 		"message": "Przypnij do strony New Tab"
 	},
+	"backup_button": {
+		"message": "Utwórz…"
+	},
+	"backup_description": {
+		"message": "New Tab Tools stworzy plik zawierający bieżące ustawienia, przypiete kafelki oraz tło."
+	},
+	"backup_header": {
+		"message": "Kopia zapasowa:"
+	},
+	"backup_restore_button": {
+		"message": "Kopie zapasowe…"
+	},
 	"bg_header": {
 		"message": "Obraz tła strony:"
 	},
@@ -20,20 +32,20 @@
 	"changelog_label": {
 		"message": "Co nowego?"
 	},
+	"contextmenu_block": {
+		"message": "Usuń ten kafelek"
+	},
 	"contextmenu_edit": {
 		"message": "Zmień ten kafelek"
+	},
+	"contextmenu_options": {
+		"message": "Opcje New Tab Tools"
 	},
 	"contextmenu_pin": {
 		"message": "Przypnij ten kafelek"
 	},
 	"contextmenu_unpin": {
 		"message": "Odepnij ten kafelek"
-	},
-	"contextmenu_block": {
-		"message": "Usuń ten kafelek"
-	},
-	"contextmenu_options": {
-		"message": "Opcje New Tab Tools"
 	},
 	"database_error_cookies": {
 		"message": "Jeżeli ciasteczka są wyłączone, dodaj wyjątek dla $URL$.",
@@ -72,9 +84,6 @@
 	"filter_button": {
 		"message": "Filtrowanie…"
 	},
-	"filter_helptext": {
-		"message": "Aby ograniczyć domenę z poddomenami dodaj kropkę z przodu, np.: .example.com"
-	},
 	"filter_header_add": {
 		"message": "Dodaj filtr:"
 	},
@@ -86,6 +95,9 @@
 	},
 	"filter_header_unpinned": {
 		"message": "Limit odpiętych kafelków"
+	},
+	"filter_helptext": {
+		"message": "Aby ograniczyć domenę z poddomenami dodaj kropkę z przodu, np.: .example.com"
 	},
 	"filter_placeholder_host": {
 		"message": "Wpisz lub wybierz domenę"
@@ -129,9 +141,6 @@
 			}
 		}
 	},
-	"options_header": {
-		"message": "Opcje:"
-	},
 	"options_columns": {
 		"message": "Kolumny"
 	},
@@ -143,6 +152,9 @@
 	},
 	"options_grid_spacing": {
 		"message": "Odstępy siatki"
+	},
+	"options_header": {
+		"message": "Opcje:"
 	},
 	"options_historytiles": {
 		"message": "Kafelki z historii przeglądania"
@@ -192,8 +204,26 @@
 	"recently_closed_tabs": {
 		"message": "Ostatnio zamknięte zakładki:"
 	},
+	"restore_button": {
+		"message": "Przywróć"
+	},
+	"restore_description": {
+		"message": "Wybierz plik kopii zapasowej New Tab Tools, aby przywrócić ustawienia."
+	},
+	"restore_header": {
+		"message": "Przywracanie kopii zapasowej:"
+	},
+	"restore_warning": {
+		"message": "Nadpisane zostaną bieżące ustawienia, przypięte kafelki oraz tło. Ta operacja jest nieodwracalna."
+	},
+	"tile_block": {
+		"message": "Usuń tę stronę"
+	},
 	"tile_header": {
 		"message": "Kafelki:"
+	},
+	"tile_pin": {
+		"message": "Przypnij tę stronę w tym miejscu"
 	},
 	"tile_savedthumb_label": {
 		"message": "Zapisany obraz:"
@@ -231,16 +261,16 @@
 	"tile_title_set": {
 		"message": "Ustaw"
 	},
-	"tile_block": {
-		"message": "Usuń tę stronę"
-	},
-	"tile_pin": {
-		"message": "Przypnij tę stronę w tym miejscu"
-	},
 	"tile_unpin": {
 		"message": "Odepnij stronę"
 	},
 	"tileurl_empty": {
 		"message": "Pusty kafelek"
+	},
+	"tile_url_placeholder": {
+		"message": "Wprowadź nowy adres URL dla kafelka"
+	},
+	"tile_url_set": {
+		"message": "Ustaw"
 	}
 }

@@ -1,14 +1,14 @@
 {
 	"name": "__MSG_extensionName__",
 	"description": "__MSG_extensionDescription__",
-	"version": "86.0b2",
+	"version": "90.3",
 	"icons": {
 		"48": "images/icon.svg"
 	},
 	"applications": {
 		"gecko": {
 			"id": "newtabtools@darktrojan.net",
-			"strict_min_version": "56.0a1"
+			"strict_min_version": "64.0"
 		}
 	},
 	"chrome_url_overrides": {
@@ -16,9 +16,12 @@
 	},
 	"background": {
 		"scripts": [
+			"common.js",
 			"tiles.js",
 			"prefs.js",
-			"background.js"
+			"background.js",
+			"lib/zip.js",
+			"export.js"
 		]
 	},
 	"browser_action": {
@@ -36,14 +39,17 @@
 	},
 	"permissions": [
 		"<all_urls>",
-		"bookmarks",
-		"history",
 		"idle",
 		"sessions",
 		"storage",
 		"tabs",
 		"topSites",
 		"webNavigation"
+	],
+	"optional_permissions": [
+		"bookmarks",
+		"downloads",
+		"history"
 	],
 	"default_locale": "en",
 	"manifest_version": 2

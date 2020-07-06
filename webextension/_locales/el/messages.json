@@ -8,6 +8,18 @@
 	"action_pin": {
 		"message": "Καρφίτσωμα στην σελίδα Νέας Καρτέλας"
 	},
+	"backup_button": {
+		"message": "Δημιουργία αντιγράφου ασφαλείας…"
+	},
+	"backup_description": {
+		"message": "Το New Tab Tools θα δημιουργήσει ένα αρχείο με τις ρυθμίσεις σας, τα καρφιτσωμένα πλακίδια και την εικόνα παρασκηνίου."
+	},
+	"backup_header": {
+		"message": "Αντίγραφο ασφαλείας:"
+	},
+	"backup_restore_button": {
+		"message": "Δημιουργία/Επαναφορά αντιγράφου ασφαλείας…"
+	},
 	"bg_header": {
 		"message": "Εικόνα παρασκηνίου σελίδας:"
 	},
@@ -66,9 +78,6 @@
 	"filter_button": {
 		"message": "Φιλτράρισμα…"
 	},
-	"filter_helptext": {
-		"message": "Για να περιορίσετε έναν τομέα και όλους τους υποτομείς του, προσθέστε μία τελεία μπροστά από τον τομέα, έτσι: .example.com"
-	},
 	"filter_header_add": {
 		"message": "Προσθήκη φίλτρου:"
 	},
@@ -80,6 +89,9 @@
 	},
 	"filter_header_unpinned": {
 		"message": "Όριο Μη-καρφιτσωμένων Πλακιδίων"
+	},
+	"filter_helptext": {
+		"message": "Για να περιορίσετε έναν τομέα και όλους τους υποτομείς του, προσθέστε μία τελεία μπροστά από τον τομέα, έτσι: .example.com"
 	},
 	"filter_placeholder_host": {
 		"message": "Πληκτρολογήστε ή επιλέξτε τομέα"
@@ -117,9 +129,6 @@
 	"newversion": {
 		"message": "Το New Tab Tools έχει ενημερωθεί στην έκδοση $1. Το New Tab Tools είναι δωρεάν, αλλά η συνεισφορά σας θα εκτιμηθεί!"
 	},
-	"options_header": {
-		"message": "Επιλογές:"
-	},
 	"options_columns": {
 		"message": "Στήλες"
 	},
@@ -131,6 +140,9 @@
 	},
 	"options_grid_spacing": {
 		"message": "Απόσταση πλέγματος"
+	},
+	"options_header": {
+		"message": "Επιλογές:"
 	},
 	"options_historytiles": {
 		"message": "Πλακίδια από το ιστορικό περιήγησης"
@@ -172,23 +184,47 @@
 		"message": "Προσθήκη"
 	},
 	"pin_url_header": {
-		"message": "Προσθήκη τίτλου:"
+		"message": "Προσθήκη πλακιδίου:"
+	},
+	"pin_url_permissions": {
+		"message": "Το New Tab Tools χρειάζεται επιπλέον δικαιώματα για μπορέσει να χρησιμοποιήσει το ιστορικό και τους σελιδοδείκτες σας."
 	},
 	"pin_url_placeholder": {
 		"message": "Πληκτρολογήστε ή επιλέξτε μία ιστοσελίδα"
 	},
+	"pin_url_request": {
+		"message": "Συνέχεια…"
+	},
 	"recently_closed_tabs": {
 		"message": "Πρόσφατα κλεισμένες καρτέλες:"
 	},
+	"restore_button": {
+		"message": "Επαναφορά"
+	},
+	"restore_description": {
+		"message": "Επιλέξτε ένα αντίγραφο ασφαλείας του New Tab Tools, το οποίο θέλετε να επαναφέρετε."
+	},
+	"restore_header": {
+		"message": "Επαναφορά:"
+	},
+	"restore_warning": {
+		"message": "Αυτό θα ακυρώσει τις τρέχουσες ρυθμίσεις σας, τα καρφιτσωμένα πλακίδια και την εικόνα παρασκηνίου. Δεν μπορεί να αναιρεθεί."
+	},
+	"tile_block": {
+		"message": "Αφαίρεση ιστοσελίδας"
+	},
 	"tile_header": {
 		"message": "Πλακίδια:"
+	},
+	"tile_pin": {
+		"message": "Καρφίτσωμα ιστοσελίδας στην τρέχουσα θέση της"
 	},
 	"tile_savedthumb_label": {
 		"message": "Αποθηκευμένη εικόνα:"
 	},
 	"tile_savedthumb_savecurrent": {
 		"message": "Αποθήκευση τρέχουσας μικρογραφίας"
-},
+	},
 	"tile_savedthumb_set": {
 		"message": "Εφαρμογή"
 	},
@@ -205,7 +241,7 @@
 		"message": "Προηγούμενη σειρά"
 	},
 	"tile_thumbnail_bgcolor": {
-		"message": "Χρώμα Φόντου:"
+		"message": "Χρώμα παρασκηνίου:"
 	},
 	"tile_thumbnail_remove": {
 		"message": "Αφαίρεση"
@@ -219,16 +255,16 @@
 	"tile_title_set": {
 		"message": "Εφαρμογή"
 	},
-	"tile_block": {
-		"message": "Αφαίρεση ιστοσελίδας"
-	},
-	"tile_pin": {
-		"message": "Καρφίτσωμα ιστοσελίδας στην τρέχουσα τοποθεσία της"
-	},
 	"tile_unpin": {
 		"message": "Ξεκαρφίτσωμα ιστοσελίδας"
 	},
 	"tileurl_empty": {
 		"message": "Κενό πλακίδιο"
+	},
+	"tile_url_placeholder": {
+		"message": "Πληκτρολογήστε μία νέα διεύθυνση URL"
+	},
+	"tile_url_set": {
+		"message": "Εφαρμογή"
 	}
 }

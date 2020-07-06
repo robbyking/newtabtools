@@ -1,4 +1,10 @@
-/* globals Prefs, Tiles, Background, chrome, indexedDB, IDBKeyRange */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* import-globals-from export.js */
+/* import-globals-from prefs.js */
+
 Promise.all([
 	Prefs.init(),
 	initDB()
@@ -33,12 +39,13 @@ Promise.all([
 });
 
 var db;
+const NEW_TAB_URL = chrome.runtime.getURL('newTab.xhtml');
 
 function initDB() {
 	return new Promise(function(resolve, reject) {
 		let request = indexedDB.open('newTabTools', 9);
 
-		request.onsuccess = function(/*event*/) {
+		request.onsuccess = function(/* event */) {
 			// console.log(event.type, event);
 			db = this.result;
 			resolve();
@@ -48,7 +55,7 @@ function initDB() {
 			reject(event);
 		};
 
-		request.onupgradeneeded = function(/*event*/) {
+		request.onupgradeneeded = function(/* event */) {
 			// console.log(event.type, event);
 			db = this.result;
 
@@ -89,7 +96,7 @@ function waitForDB() {
 	});
 }
 
-function getTZDateString(date=new Date()) {
+function getTZDateString(date = new Date()) {
 	return [date.getFullYear(), date.getMonth() + 1, date.getDate()].map(p => p.toString().padStart(2, '0')).join('-');
 }
 
@@ -148,10 +155,13 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 		let {url, image} = message;
 		if (url && image) {
 			db.transaction('thumbnails', 'readwrite').objectStore('thumbnails').put({
-				url, image, stored: today, used: today
+				url,
+				image,
+				stored: today,
+				used: today
 			});
 		}
-		return;
+		return false;
 	case 'Thumbnails.get':
 		let map = new Map();
 		db.transaction('thumbnails', 'readwrite').objectStore('thumbnails').openCursor().onsuccess = function() {
@@ -171,7 +181,15 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 			}
 		};
 		return true;
+
+	case 'Export:backup':
+		makeZip().then(sendResponse());
+		return true;
+	case 'Import:restore':
+		readZip(message.file).then(sendResponse());
+		return true;
 	}
+	return false;
 });
 
 chrome.webNavigation.onCompleted.addListener(function(details) {
@@ -206,12 +224,13 @@ chrome.webNavigation.onCompleted.addListener(function(details) {
 
 chrome.tabs.query({}, function(tabs) {
 	for (let tab of tabs) {
-		if (!['http:', 'https:', 'ftp:'].includes(new URL(tab.url).protocol)) {
+		if (tab.url == NEW_TAB_URL) {
+			chrome.tabs.reload(tab.id);
+		} else if (!['http:', 'https:', 'ftp:'].includes(new URL(tab.url).protocol)) {
 			chrome.browserAction.disable(tab.id);
-			return;
+		} else {
+			chrome.browserAction.enable(tab.id);
 		}
-
-		chrome.browserAction.enable(tab.id);
 	}
 });
 
@@ -237,51 +256,3 @@ function idleListener(state) {
 }
 
 chrome.idle.onStateChanged.addListener(idleListener);
-
-function compareVersions(a, b) {
-	function splitApart(name) {
-		var parts = [];
-		var lastIsDigit = false;
-		var part = '';
-		for (let c of name.toString()) {
-			let currentIsDigit = c >= '0' && c <= '9';
-			if (c == '.' || lastIsDigit != currentIsDigit) {
-				if (part) {
-					parts.push(lastIsDigit ? parseInt(part, 10) : part);
-				}
-				part = c == '.' ? '' : c;
-			} else {
-				part += c;
-			}
-			lastIsDigit = currentIsDigit;
-		}
-		if (part) {
-			parts.push(lastIsDigit ? parseInt(part, 10) : part);
-		}
-		return parts;
-	}
-	function compareParts(x, y) {
-		let xType = typeof x;
-		let yType = typeof y;
-
-		switch (xType) {
-		case yType:
-			return x == y ? 0 : (x < y ? -1 : 1);
-		case 'string':
-			return -1;
-		case 'undefined':
-			return yType == 'number' ? (y === 0 ? 0 : -1) : 1;
-		case 'number':
-			return x === 0 && yType == 'undefined' ? 0 : 1;
-		}
-	}
-	let aParts = splitApart(a);
-	let bParts = splitApart(b);
-	for (let i = 0; i <= aParts.length || i <= bParts.length; i++) {
-		let comparison = compareParts(aParts[i], bParts[i]);
-		if (comparison !== 0) {
-			return comparison;
-		}
-	}
-	return 0;
-}
